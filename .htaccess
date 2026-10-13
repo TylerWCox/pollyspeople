@@ -1,0 +1,118 @@
+# Genealogy Brick Walls — static site (Apache)
+
+Options -Indexes -MultiViews
+DirectoryIndex index.html
+AddDefaultCharset UTF-8
+AddCharset UTF-8 .html .css
+
+# --------------------------------------------------------------------------
+# Never serve dotfiles (.git, .vscode/sftp.json, .gitignore, .htaccess)
+# --------------------------------------------------------------------------
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  # .well-known stays reachable for SSL certificate validation
+  RewriteRule "(^|/)\.(?!well-known/)" - [F]
+</IfModule>
+<FilesMatch "^\.">
+  Require all denied
+</FilesMatch>
+
+<IfModule mod_rewrite.c>
+  # ------------------------------------------------------------------------
+  # Uncomment once the site has an SSL certificate to force HTTPS
+  # ------------------------------------------------------------------------
+  # RewriteCond %{HTTPS} !=on
+  # RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+  # ------------------------------------------------------------------------
+  # Old WordPress links
+  # ------------------------------------------------------------------------
+
+  # Shortlinks like /?p=20 and /?page_id=94
+  RewriteCond %{QUERY_STRING} (?:^|&)(?:p|page_id)=17(?:&|$)
+  RewriteRule ^$ /2020/12/29/pollys-people/? [R=301,L]
+  RewriteCond %{QUERY_STRING} (?:^|&)(?:p|page_id)=20(?:&|$)
+  RewriteRule ^$ /2021/01/18/jacob-endly/? [R=301,L]
+  RewriteCond %{QUERY_STRING} (?:^|&)(?:p|page_id)=32(?:&|$)
+  RewriteRule ^$ /2021/02/23/evangeline-mary-endly/? [R=301,L]
+  RewriteCond %{QUERY_STRING} (?:^|&)(?:p|page_id)=34(?:&|$)
+  RewriteRule ^$ /2021/02/23/william-h-endly/? [R=301,L]
+  RewriteCond %{QUERY_STRING} (?:^|&)(?:p|page_id)=36(?:&|$)
+  RewriteRule ^$ /2021/02/24/elizabeth-ann-endly/? [R=301,L]
+  RewriteCond %{QUERY_STRING} (?:^|&)(?:p|page_id)=47(?:&|$)
+  RewriteRule ^$ /catherine-m-endly-2/? [R=301,L]
+  RewriteCond %{QUERY_STRING} (?:^|&)(?:p|page_id)=50(?:&|$)
+  RewriteRule ^$ /sarah-ann-endly-3/? [R=301,L]
+  RewriteCond %{QUERY_STRING} (?:^|&)(?:p|page_id)=52(?:&|$)
+  RewriteRule ^$ /john-william-endly/? [R=301,L]
+  RewriteCond %{QUERY_STRING} (?:^|&)(?:p|page_id)=54(?:&|$)
+  RewriteRule ^$ /sophia-lenora-endly/? [R=301,L]
+  RewriteCond %{QUERY_STRING} (?:^|&)(?:p|page_id)=57(?:&|$)
+  RewriteRule ^$ /jacob-r-endly/? [R=301,L]
+  RewriteCond %{QUERY_STRING} (?:^|&)(?:p|page_id)=59(?:&|$)
+  RewriteRule ^$ /george-alfred-endly/? [R=301,L]
+  RewriteCond %{QUERY_STRING} (?:^|&)(?:p|page_id)=63(?:&|$)
+  RewriteRule ^$ /evageline-mary-endly/? [R=301,L]
+  RewriteCond %{QUERY_STRING} (?:^|&)(?:p|page_id)=72(?:&|$)
+  RewriteRule ^$ /william-h-endly-son-of-jacob-endly-and-mary-rabe/? [R=301,L]
+  RewriteCond %{QUERY_STRING} (?:^|&)(?:p|page_id)=76(?:&|$)
+  RewriteRule ^$ /william-james-endly-son-of-william-h-endly-and-catherine-pedon/? [R=301,L]
+  RewriteCond %{QUERY_STRING} (?:^|&)(?:p|page_id)=80(?:&|$)
+  RewriteRule ^$ /catherine-pedon-pedan-paydon-wife-of-william-h-endly/? [R=301,L]
+  RewriteCond %{QUERY_STRING} (?:^|&)(?:p|page_id)=84(?:&|$)
+  RewriteRule ^$ /harriet-hattie-endly-daughter-of-william-h-endly-and-sarah-ann-brooks/? [R=301,L]
+  RewriteCond %{QUERY_STRING} (?:^|&)(?:p|page_id)=94(?:&|$)
+  RewriteRule ^$ /94-2/? [R=301,L]
+
+  # Searches (/?s=...) and any other leftover query on the home page
+  RewriteCond %{QUERY_STRING} (?:^|&)s=
+  RewriteRule ^$ /? [R=301,L]
+
+  # Removed default WordPress content
+  RewriteRule ^2020/11/19/hello-world/?$ / [R=301,L]
+  RewriteRule ^sample-page/?$ / [R=301,L]
+
+  # Feeds, comment-feed and pagination URLs → the page they belong to
+  RewriteRule ^(.*/)?feed/?$ /$1 [R=301,L]
+  RewriteRule ^(.*/)?comment-page-\d+/?$ /$1 [R=301,L]
+
+  # WordPress admin, login, API and asset paths no longer exist
+  RewriteRule ^(wp-admin|wp-includes|wp-content|wp-json)(/|$) - [G,L]
+  RewriteRule ^(wp-login|xmlrpc|wp-cron|wp-signup|wp-trackback|wp-comments-post)\.php$ - [G,L]
+
+  # Add the trailing slash to directory URLs (/jacob-r-endly → /jacob-r-endly/)
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^(.*[^/])$ /$1/ [R=301,L]
+</IfModule>
+
+# --------------------------------------------------------------------------
+# Security headers
+# --------------------------------------------------------------------------
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+  # No scripts anywhere on the site; images allowed from Find a Grave
+  Header always set Content-Security-Policy "default-src 'self'; img-src 'self' data: https://images.findagrave.com; style-src 'self'; script-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'self'"
+</IfModule>
+
+# --------------------------------------------------------------------------
+# Compression
+# --------------------------------------------------------------------------
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/plain image/svg+xml
+</IfModule>
+
+# --------------------------------------------------------------------------
+# Caching: pages revalidate, stylesheet cached for a week
+# --------------------------------------------------------------------------
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresDefault "access plus 1 hour"
+  ExpiresByType text/html "access plus 0 seconds"
+  ExpiresByType text/css "access plus 7 days"
+  ExpiresByType image/jpeg "access plus 30 days"
+  ExpiresByType image/png "access plus 30 days"
+  ExpiresByType image/svg+xml "access plus 30 days"
+</IfModule>
