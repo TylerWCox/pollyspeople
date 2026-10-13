@@ -1,0 +1,15 @@
+# Editor / deploy settings (sftp.json may contain server credentials)
+.vscode/
+.idea/
+*.code-workspace
+
+# OS clutter
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary and backup files
+*.tmp
+*.bak
+*.swp
+*~
